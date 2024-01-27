@@ -121,7 +121,7 @@ public class Fruit {
 
     public void update(){
         physicHandle();
-        despawnTimer+=MyFirstUI.DeltaTime;
+        despawnTimer+=Main.DeltaTime;
         if(despawnTimer>=10) isTimeout = true;
     }
 
