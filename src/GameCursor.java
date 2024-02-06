@@ -1,7 +1,9 @@
+import javafx.event.Event;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.effect.Bloom;
 import javafx.scene.effect.Glow;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 
 import java.awt.*;
 
@@ -11,8 +13,10 @@ public class GameCursor {
     private double posY;
     private double prevPosX;
     private double prevPosY;
-    private final double radius = 5;
-    private boolean isClicked;
+    private final double radius = 8;
+    private boolean isClicked = false;
+    private boolean isMoving = false;
+    private Circle cursorCircle;
 
 
     //-----<getters&setters>-----------------------------------------------
@@ -58,44 +62,79 @@ public class GameCursor {
         isClicked = clicked;
     }
 
+    public boolean isMoving() {
+        return isMoving;
+    }
+
+    public void setMoving(boolean moving) {
+        isMoving = moving;
+    }
+
+    public Circle getCursorCircle() {
+        return cursorCircle;
+    }
 
     //-----<constructor>---------------------------------------------------
     public GameCursor() {
-        this.posX = Main.WIDTH/2.0;
-        this.posY = Main.HEIGHT/2.0;
+
+        //place outside window before game start
+        this.posX = -80;
+        this.posY = -80;
+
+        //init cursor's circle
+        cursorCircle = new Circle();
+        cursorCircle.setRadius(radius);
+        cursorCircle.setFill(Color.web("RED"));
+        cursorCircle.setMouseTransparent(true);
+        cursorCircle.setStrokeWidth(2);
     }
 
     //-----<Method>--------------------------------------------------------
 
+    public void setPosition(double posX , double posY){
+
+        cursorCircle.setTranslateX(posX - cursorCircle.getCenterX() - radius);
+        cursorCircle.setTranslateY(posY - cursorCircle.getCenterY() - radius);
+
+        setPosX(posX);
+        setPosY(posY);
+    }
+
+    //draw cursor
     public void drawCursor(){
         if(!isClicked){
-            Main.gc.setStroke(Color.web("WHITE"));
+            cursorCircle.setStroke(Color.web("RED"));
         }
-        else Main.gc.setStroke(Color.web("RED"));
+        else {
+            cursorCircle.setStroke(Color.web("WHITE"));
+        }
 
-        Main.gc.setLineWidth(3);
-        Main.gc.strokeOval((posX)-radius, (posY)-radius, radius * 2, radius * 2);
+        ParticleManager.getInstance().particleUpdateAndDraw();
 
     }
 
     //create cursor's trails
     public void makeTrailEffect(){
-        double[] unitVector = calculateDirection();
-        //ParticleManager.getInstance().createCursorParticle(prevPosX , prevPosY , -(unitVector[0]*50) , -(unitVector[1]*50));
-        ParticleManager.getInstance().createCursorParticle(prevPosX , prevPosY , 0 , 0);
-    }
-
-    //return 2DVector of cursor direction
-    public double[] calculateDirection(){
-        double[] vector = {posX - prevPosX, posY - prevPosY};
-        double denom = Math.sqrt(vector[0]*vector[0] + vector[1]*vector[1]);
-        vector[0]/=denom;
-        vector[1]/=denom;
-        return vector;
+        ParticleManager.getInstance().createCursorParticle(posX , posY , 0 , 0);
     }
 
     //check if cursor is in Fruit object
     public boolean isInFruit(Fruit f){
-        return ((f.getPosX() <= posX && posX <= f.getPosX() + f.getWidth()) && (f.getPosY() <= posY && posY <= f.getPosY() + f.getHeight()));
+
+        //HITBOX is 1.5 time the cursor radius
+        double CursorTopLeftX = posX-(radius*1.5);
+        double CursorTopLeftY = posY-(radius*1.5);
+        double CursorBotRightX = posX+(radius*1.5);
+        double CursorBotRightY = posY+(radius*1.5);
+
+        double FruitTopLeftX = f.getPosX();
+        double FruitTopLeftY = f.getPosY();
+        double FruitBotRightX = f.getPosX()+f.getWidth();
+        double FruitBotRightY = f.getPosY()+f.getHeight();
+
+        //true if HITBOX of cursor not overlap fruit
+        return !( (CursorTopLeftX > FruitBotRightX || CursorBotRightX < FruitTopLeftX) ||
+                (CursorTopLeftY > FruitBotRightY || CursorBotRightY < FruitTopLeftY) );
+
     }
 }

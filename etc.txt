@@ -1,0 +1,252 @@
+
+=============================================================================
+<PLAYER INPUT CODE>
+        scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent keyEvent) {
+                if(keyEvent.getCode() == KeyCode.A){
+                    p1.isMoveLeft=true;
+                }
+                if(keyEvent.getCode()==KeyCode.D){
+                    p1.isMoveRight=true;
+                }
+                if(keyEvent.getCode()==KeyCode.SPACE){
+                    p1.isJump=true;
+                }
+                if(keyEvent.getCode()==KeyCode.SHIFT && p1.dashInterval<=0 && (p1.isMoveLeft|| p1.isMoveRight)){
+                    p1.isDash=true;
+                    p1.dashInterval=0.75;
+                }
+
+
+            }
+        });
+        scene.setOnKeyReleased(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent keyEvent) {
+                if(keyEvent.getCode() == KeyCode.A){
+                    p1.isMoveLeft=false;
+                }
+                if(keyEvent.getCode()==KeyCode.D){
+                    p1.isMoveRight=false;
+                }
+
+            }
+        });
+
+=============================================================================
+<PLAYER CLASS CODE>
+            public class Player{
+                public String name;
+                public Color color;
+                public double posX;
+                public double posY;
+                public double pWidth;
+                public double pHeight;
+                public double pAWidth;
+                public double pAHeight;
+
+                public double velX = 0;
+                public double velY = 0;
+
+                public boolean isMoveLeft = false;
+                public boolean isMoveRight= false;
+
+                public boolean isJump= false;
+                public boolean isJumping = false;
+                public boolean isOnGround= false;
+                public boolean isDash= false;
+                public double dashInterval = 0;
+
+                public Player(String name, Color color , double posX, double posY, double pWidth, double pHeight, double pAWidth, double pAHeight) {
+                    this.name = name;
+                    this.color=color;
+                    this.posX = posX;
+                    this.posY = posY;
+                    this.pWidth = pWidth;
+                    this.pHeight = pHeight;
+                    this.pAWidth = pAWidth;
+                    this.pAHeight = pAHeight;
+                }
+
+                public void movementHandling(){
+
+                    if(isDash && (isMoveLeft||isMoveRight)){
+                        isDash=false;
+                        velX= isMoveLeft? -1000:1000;
+                    }
+                    else if(isMoveLeft && velX>=-300) {
+                        velX -= 60;
+                    }
+                    else if(isMoveRight && velX<=300) {
+                        velX += 60;
+                    }
+
+
+                    if(isJump && isOnGround) {//jump
+                        isJump=false;
+                        isJumping=true;
+                        isOnGround=false;
+                        velY = -900;
+                    } else if (isJump&&isJumping) {//doubleJump
+                        isJump=false;
+                        isJumping=false;
+                        velY = -900;
+                    }
+
+                    //position displaces
+                    posX+=velX*DeltaTime;
+                    posY+=velY*DeltaTime;
+
+                    if(velX!=0) velX = velX>0? velX-30 : velX+30;//reduce velX
+
+                    if(velY<=700) velY += gravity;
+
+                }
+
+                public void checkCollision(ArrayList<object> objList){
+                    for(object obj : objList){ //check every object in list
+                        double player_bot = posY+pHeight;
+                        double obj_bot = obj.y+obj.height;
+                        double player_right=posX+pWidth;
+                        double obj_right=obj.x+obj.width;
+
+                        if(((obj.x<posX&&posX<obj_right) || (obj.x<player_right&&player_right<obj_right)) &&
+                                ((obj.y<posY&&posY<obj_bot) || (obj.y<player_bot&&player_bot<obj_bot))){
+
+                            double b_col = Math.abs(obj_bot - posY);
+                            double t_col = Math.abs(player_bot - obj.y);
+                            double l_col = Math.abs(player_right - obj.x);
+                            double r_col = Math.abs(obj_right - posX);
+
+                            if (t_col < b_col && t_col < l_col && t_col < r_col && velY > 0) {//Top collision
+                                posY = obj.y - pHeight;
+                                velY = 0;
+                                isOnGround = true;
+
+
+                            }
+                            if (b_col < t_col && b_col < l_col && b_col < r_col && velY < 0) {//bottom collision
+                                velY = 0;
+                                posY = obj_bot;
+
+                            }
+                            if (l_col < r_col && l_col < t_col && l_col < b_col && velX > 0) {//Left collision
+                                velX = 0;
+                                posX = obj.x-pWidth;
+
+                            }
+                            if (r_col < l_col && r_col < t_col && r_col < b_col && velX < 0) {//Right collision
+                                velX = 0;
+                                posX = obj_right;
+
+                            }
+                        }
+                    }
+                }
+
+                public void physicHandling(){
+                    if(!isOnGround) velY+=5;
+                }
+
+                public void draw(){
+                    gc.setFill(color);
+                    gc.fillRoundRect(posX,posY,pWidth,pHeight,pAWidth,pAHeight);
+                }
+
+                public void checkWall(){
+                    if(posY+pHeight>HEIGHT){//touch floor
+                        isOnGround=true;
+                        velY=0;
+                        posY=HEIGHT-pHeight;
+                    }
+                    if (posX <= 0) {//touch left screen
+                        velX = 0;
+                        posX = 0;
+                    }
+                    if (posX + pWidth >= WIDTH) {//touch right screen
+                        velX = 0;
+                        posX = WIDTH - pWidth;
+                    }
+                }
+
+                public void cooldownHandle(){
+                    if(dashInterval>=0)dashInterval-=DeltaTime;
+                        else dashInterval=0;
+                    System.out.println("YES");
+                }
+
+                public void update(){
+
+                    cooldownHandle();
+                    movementHandling();
+                    physicHandling();
+                    checkCollision(objList);
+                    checkWall();
+                    draw();
+
+                }
+            }
+
+=============================================================================
+<OBJECT CLASS CODE>
+public class object{
+        public double x;
+        public double y;
+        public double width;
+        public double height;
+        public Color color;
+
+        public object(double x , double y , double width, double height , Color color){
+            this.x=x;
+            this.y=y;
+            this.width=width;
+            this.height=height;
+            this.color=color;
+        }
+
+        public void draw(){
+            gc.setFill(color);
+            gc.fillRect(x,y,width,height);
+        }
+    }
+    =============================================================================
+
+<run CLASS CODE>
+    //this method will update every frame (Old rendering method)
+    public void run(GraphicsContext gc){
+
+        //draw grey background
+
+        gc.setFill((Color.web("Grey")));
+        gc.fillRect(0,0,WIDTH,HEIGHT);
+
+        //spawn fruit every 1.5 sec
+        spawnTimer += DeltaTime;
+        if(spawnTimer>2){
+            //random number to generate
+            Random rand = new Random();
+            int totalGenerated = rand.nextInt(2,5);
+            for(int i = 0 ; i<totalGenerated ; i++){
+                tm.createFruits();
+            }
+            spawnTimer=0;
+        }
+        drawFruit(tm.getFruits());
+
+        //debug text
+        gc.setFont(new Font("Segoe UI Black",32));
+        gc.setFill(Color.web("Black"));
+        gc.fillText("FruitsSize: " + tm.getFruits().size() + "\nmouse(X,Y): " + cursor.getPosX()+","+cursor.getPosY(), 20 , 70);
+
+        ParticleManager.getInstance().particleUpdate();
+        cursor.drawCursor();
+
+    }
+        //============OLD RENDERING METHOD==============
+        //Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(DeltaTime), e -> run(gc)));
+        //timeline.setCycleCount(Timeline.INDEFINITE);
+        //timeline.play();
+        //==============================================
+
+    =============================================================================

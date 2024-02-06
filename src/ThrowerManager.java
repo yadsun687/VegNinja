@@ -6,6 +6,14 @@ import java.util.Random;
 public class ThrowerManager {
 
     private ArrayList<Fruit> fruits;
+    private static ThrowerManager instance;
+
+    public static ThrowerManager getInstance(){
+        if(instance == null){
+            instance = new ThrowerManager();
+        }
+        return instance;
+    }
 
     public ThrowerManager(){
         fruits = new ArrayList<>();
@@ -39,4 +47,32 @@ public class ThrowerManager {
         //add fruit to fruitList
         fruits.add(new Fruit(velx,vely,"test",Color.web(Fruit.getColorList()[colorIndex]),X*Main.WIDTH,Main.HEIGHT+Y , width , height));
     }
+
+    public void drawFruit(ArrayList<Fruit> fruits , GameCursor cursor){
+
+        for(int i = 0 ; i < fruits.size() ; i++) {
+            Fruit f = fruits.get(i);
+            //will remove fruit which exists for too long
+            if (f.checkTimeout()) {
+                fruits.remove(i);
+                i--;
+                continue;
+            }
+
+            if (cursor.isClicked() && cursor.isMoving() && cursor.isInFruit(f)) {//break fruit when hit by cursor
+                SoundManager.getInstance().playSoundEffect("Fruit_Slash");
+                Main.gc.setFill(Color.web("RED"));
+                Main.gc.fillRect(f.getPosX(), f.getPosY(), f.getWidth(), f.getHeight());
+                fruits.remove(i);
+                i--;
+            } else {
+                Main.gc.setFill(fruits.get(i).getColor());
+                Main.gc.fillRect(f.getPosX(), f.getPosY(), f.getWidth(), f.getHeight());
+                f.setPosX(fruits.get(i).getPosX() + fruits.get(i).getVelX() * Main.GameAnimationTimer.deltaTime);
+                f.setPosY(fruits.get(i).getPosY() + fruits.get(i).getVelY() * Main.GameAnimationTimer.deltaTime);
+                f.update();
+            }
+        }
+    }
+
 }

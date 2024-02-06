@@ -1,8 +1,6 @@
 public class CursorParticle {
     private double posX;
     private double posY;
-    private double velX;
-    private double velY;
     private double despawnTimer=0;
     private boolean isTimeout = false;
 
@@ -22,22 +20,6 @@ public class CursorParticle {
         this.posY = posY;
     }
 
-    public double getVelX() {
-        return velX;
-    }
-
-    public void setVelX(double velX) {
-        this.velX = velX;
-    }
-
-    public double getVelY() {
-        return velY;
-    }
-
-    public void setVelY(double velY) {
-        this.velY = velY;
-    }
-
     public double getDespawnTimer() {
         return despawnTimer;
     }
@@ -54,18 +36,14 @@ public class CursorParticle {
         isTimeout = timeout;
     }
 
-    public CursorParticle(double posX, double posY, double velX, double velY) {
+    public CursorParticle(double posX, double posY) {
         this.posX = posX;
         this.posY = posY;
-        this.velX = velX;
-        this.velY = velY;
-    }
+        }
 
     public void update(){
         if(despawnTimer>0.1) isTimeout=true;
-        posX+=velX*Main.DeltaTime;
-        posY+=velY*Main.DeltaTime;
-        despawnTimer+=Main.DeltaTime;
+        despawnTimer+=Main.GameAnimationTimer.deltaTime;
     }
 
 }

@@ -9,7 +9,7 @@ public class Fruit {
     private double posY;
     private int width;
     private int height;
-    public static final double gravity = 20;
+    public static final double gravity = 1100;
     private double despawnTimer=0;
     private boolean isTimeout = false;
     private static final String[] colorList = {"CADETBLUE" , "CORAL" , "DARKORANGE" , "DEEPPINK" , "GOLD" , "GREENYELLOW"};
@@ -115,13 +115,15 @@ public class Fruit {
     //-----<Method>--------------------------------------------------------
 
     public void physicHandle(){
-        velY+=gravity;
+        //velY+=gravity*Main.DeltaTime;
+        velY+=gravity*Main.GameAnimationTimer.deltaTime;
         if(velX!=0) velX-= 1 * (Math.abs(velX)/velX);
     }
 
     public void update(){
         physicHandle();
-        despawnTimer+=Main.DeltaTime;
+        //despawnTimer+=Main.DeltaTime;
+        despawnTimer+= Main.GameAnimationTimer.deltaTime;
         if(despawnTimer>=10) isTimeout = true;
     }
 
